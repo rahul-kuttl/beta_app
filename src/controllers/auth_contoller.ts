@@ -4,6 +4,7 @@ import bcrypt from "bcrypt";
 import User from "../models/user_model";
 // TODO: use via env
 import { jwtSecret, jwtExpiration } from "../config/jwtConfig";
+import { config } from "dotenv";
 
 export const login = async (req: Request, res: Response) => {
   try {
@@ -22,7 +23,7 @@ export const login = async (req: Request, res: Response) => {
     // Verify OTP here
 
     // Generate JWT token
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+    const token = jwt.sign({ userId: user._id }, config.jwtSecret, {
       expiresIn: process.env.JWT_SECRET_EXPIRY,
     });
 

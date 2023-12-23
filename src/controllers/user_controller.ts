@@ -2,6 +2,7 @@ import User from "../models/user_model";
 import { Request } from "express";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
+import config from "../config/config";
 
 // Function to create a new user
 export async function createUser(reqBody: any) {
@@ -38,7 +39,7 @@ export async function loginUser(reqBody: any) {
   if (!validPassword) throw new Error("Invalid password");
 
   // Create and assign a token
-  const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET, {
+  const token = jwt.sign({ _id: user._id }, config.jwtSecret, {
     expiresIn: "7d",
   });
   return token;
