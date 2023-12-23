@@ -6,14 +6,14 @@ import express, {
   urlencoded,
 } from "express";
 import mongoose from "mongoose";
-import keys from "./config/keys.js";
+import config from "./config/config";
 // import router from './routes/userDetailRoute.js';
 import userRouter from "./routes/user/user_route";
 
 const app: Application = express();
 
 // Connect to MongoDB
-mongoose.connect(keys.mongodb.dbURI);
+mongoose.connect(config.mongodb.dbURI);
 mongoose.connection.on("connected", () => {
   console.log("Connected to MongoDB");
 });
@@ -36,7 +36,7 @@ app.use((err, req, res, next) => {
 // userRouter for handling user-related routes
 // app.use('/api', router);
 // Starting the server
-/*`${keys.serverConfig.port}`*/
+/*`${config.serverConfig.port}`*/
 app.listen(process.env.PORT || 3000, () => {
   console.log("Server is running on port 3000");
 });
