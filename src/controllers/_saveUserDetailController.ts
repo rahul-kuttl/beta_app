@@ -23,7 +23,7 @@
 //       // Process each attachment
 //       for (const attachment of attachments) {
 //         const buffer = Buffer.from(attachment.base64, 'base64');
-//         console.log('Attachment:', attachment); 
+//         console.log('Attachment:', attachment);
 //         const fileName = `${message.messageId}.${getFileExtension(attachment.base64)}`; // Determine file extension
 //         const s3Url = await uploadAttachmentToS3(fileName, buffer);
 //         attachmentUrls.push({ fileName, mimeType: attachment.mimeType, s3Url });
@@ -43,7 +43,6 @@
 //     // payloadData.messages.forEach((message, index) => {
 //     //   message.attachment = binaryAttachments[index];
 //     // });
-
 
 //     // Validate the payload
 //     if (!payloadData || !payloadData.messages || payloadData.messages.length === 0) {
@@ -90,39 +89,47 @@
 // };
 
 // controllers/saveUserDetailController.js
-import { Request, Response } from 'express';
+import { Request, Response } from "express";
 import PayloadModel from "../model/emailModel.js";
-import { uploadToS3 } from '../utils/s3Upload.js'; // Utility for uploading to S3
-import getFileExtension from "./fileTypeController.js";
+import { uploadToS3 } from "../utils/s3Upload.js"; // Utility for uploading to S3
+import getFileExtension from "./_fileTypeController.js";
 
 // Define interfaces to represent the structure of the data used in the function
 // Naming Convention : starts with Capital Letters
 
 interface Attachment {
-  base64:string;
-  mimeType:string;
+  base64: string;
+  mimeType: string;
 }
 
 interface Message {
-  messageId:string;
+  messageId: string;
   attachments?: Attachment[];
 }
 
 interface payloadData {
-  messages : Message[];
+  messages: Message[];
 }
 
-export const saveUserDetails = async (req:Request, res:Response) : Promise<void> => {
+export const saveUserDetails = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
   try {
-
     // Extract the payload data from the request body
 
-    const payloadData : payloadData = req.body;
-    console.log(JSON.stringify({payloadData}));
+    const payloadData: payloadData = req.body;
+    console.log(JSON.stringify({ payloadData }));
 
     // Validate the payload
-    if (!payloadData || !payloadData.messages || payloadData.messages.length === 0) {
-      return res.status(400).json({ success: false, error: 'Invalid payload structure' });
+    if (
+      !payloadData ||
+      !payloadData.messages ||
+      payloadData.messages.length === 0
+    ) {
+      return res
+        .status(400)
+        .json({ success: false, error: "Invalid payload structure" });
     }
 
     // Iterate through each message
@@ -132,13 +139,16 @@ export const saveUserDetails = async (req:Request, res:Response) : Promise<void>
 
       // Process each attachment
       for (const attachment of attachments) {
-        const buffer = Buffer.from(attachment.base64, 'base64');
-        console.log('Attachment:', attachment);
+        const buffer = Buffer.from(attachment.base64, "base64");
+        console.log("Attachment:", attachment);
 
         // Await the file extension using the provided utility function
         const fileExtension = await getFileExtension(attachment.base64);
         if (!fileExtension) {
-          console.error('Unable to determine file extension for attachment:', attachment);
+          console.error(
+            "Unable to determine file extension for attachment:",
+            attachment
+          );
           continue; // Skip this attachment if the file extension can't be determined
         }
 
@@ -161,17 +171,18 @@ export const saveUserDetails = async (req:Request, res:Response) : Promise<void>
     // Save payload to MongoDB
     const savedPayload = await PayloadModel.create(payloadData);
     res.status(201).json({ success: true, data: savedPayload });
-
   } catch (error) {
-
     //duplicate key violation on messageID field
 
-    if(error.code===11000 && error.keyPattern && error.keyPattern['messages.messageId']) {
-      res.status(400).json({success:false, error:'Duplicate messageID' });
-    }
-    else{
+    if (
+      error.code === 11000 &&
+      error.keyPattern &&
+      error.keyPattern["messages.messageId"]
+    ) {
+      res.status(400).json({ success: false, error: "Duplicate messageID" });
+    } else {
       console.error(error);
-      res.status({sucess:false , error:`Internal Server Error : ${error}`})
+      res.status({ sucess: false, error: `Internal Server Error : ${error}` });
     }
   }
 };
