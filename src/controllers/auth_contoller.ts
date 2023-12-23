@@ -22,8 +22,8 @@ export const login = async (req: Request, res: Response) => {
     // Verify OTP here
 
     // Generate JWT token
-    const token = jwt.sign({ userId: user._id }, jwtSecret, {
-      expiresIn: jwtExpiration,
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+      expiresIn: process.env.JWT_SECRET_EXPIRY,
     });
 
     // Update tokenLastAccessed for the user
