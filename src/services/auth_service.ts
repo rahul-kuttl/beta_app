@@ -1,10 +1,16 @@
 // src/services/auth.service.ts
 import User from "../models/user_model";
 import { generateToken } from "../utils/jwt_util";
+import { sendOtp } from "./sms_service";
 
 // This is a placeholder function. Implement actual SMS OTP logic.
-const verifyOtp = (mobileNumber: string, otp: string): boolean => {
+const verifyOtp = async (
+  mobileNumber: string,
+  otp: string
+): Promise<boolean> => {
   // OTP verification logic goes here
+  // Send OTP using AWS SNS
+  await sendOtp(mobileNumber, otp);
   return true;
 };
 

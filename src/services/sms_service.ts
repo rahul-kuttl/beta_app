@@ -1,39 +1,26 @@
-import axios from "axios";
+// src/utils/aws.util.ts
+import AWS from "aws-sdk";
 
-interface SmsServiceConfig {
-  apiUrl: string;
-  apiKey: string;
-  senderId: string;
-}
+const sns = new AWS.SNS({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: process.env.AWS_REGION,
+});
 
-const SmsService =
-  (config: SmsServiceConfig) => (mobileNumber: string, otp: string) => {
-    const message = `Your OTP is: ${otp}`;
-
-    // Sending SMS (impure function due to external API call)
-    return axios
-      .post(config.apiUrl, {
-        api_key: config.apiKey,
-        sender_id: config.senderId,
-        message,
-        mobile_number: mobileNumber,
-      })
-      .then((response) => {
-        console.log(`OTP sent to ${mobileNumber}`);
-        return response;
-      })
-      .catch((error) => {
-        console.error("Error sending OTP:", error);
-        throw new Error("Failed to send OTP");
-      });
+export const sendOtp = async (
+  mobileNumber: string,
+  otp: string
+): Promise<void> => {
+  const params = {
+    Message: `Your OTP is: ${otp}`,
+    PhoneNumber: mobileNumber,
+    MessageAttributes: {
+      "AWS.SNS.SMS.SenderID": {
+        "DataType": "String",
+        "StringValue": "YourSenderID",
+      },
+    },
   };
 
-// Example usage:
-// const sendOtp = createSmsSender({
-//   apiUrl: 'https://api.smsprovider.com/send',
-//   apiKey: 'your_api_key',
-//   senderId: 'your_sender_id'
-// });
-// sendOtp('1234567890', '1234').then(...).catch(...);
-
-export default SmsService;
+  await sns.publish(params).promise();
+};
