@@ -16,6 +16,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@types/hapi__joi": "^17.1.14",
     "aws-sdk": "^2.1519.0",
     "axios": "^1.5.0",
     "bcrypt": "^5.1.1",
@@ -27,6 +28,7 @@
     "http-errors": "~1.6.3",
     "joi": "^17.11.0",
     "jsonwebtoken": "^9.0.2",
+    "libphonenumber-js": "^1.10.52",
     "mongoose": "^7.5.2",
     "nodemon": "^3.0.1",
     "ts-node": "^10.8.2"

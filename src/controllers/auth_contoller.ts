@@ -3,8 +3,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import User from "../models/user_model";
 // TODO: use via env
-import { jwtSecret, jwtExpiration } from "../config/jwtConfig";
-import { config } from "dotenv";
+import config from "../config/config";
 
 export const login = async (req: Request, res: Response) => {
   try {
