@@ -27,18 +27,17 @@ app.get("/health-check", (req: Request, res: Response) => {
   res.json("Hello world");
 });
 
+// for authentication purpose only
 app.use("/authentication", authRouter);
-// Routes
+// for handling registered user related actions
 app.use("/user", userRouter);
 
 // Error handling middleware, Keep routes above this
 app.use((err: unknown, req: Request, res: Response, next: unknown) => {
   res.status(500).send("Internal Server Error");
 });
-// userRouter for handling user-related routes
-// app.use('/api', router);
+
 // Starting the server
-/*`${config.serverConfig.port}`*/
-app.listen(process.env.PORT || 3000, () => {
+app.listen(config.serverConfig.port || 3000, () => {
   console.log("Server is running on port 3000");
 });

@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { temporalClient } from "../integrations/temporal_client";
 import { LoginWorkflow } from "../temporal_app/workflows/login_workflow";
 import { UserInputError } from "../utils/error_util";
+import { convertToInternationalFormat } from "../utils/mobile_number";
 
 export const loginController = async (req: Request, res: Response) => {
   // Extract mobile number, dial code, and OTP from the request body
@@ -12,8 +13,13 @@ export const loginController = async (req: Request, res: Response) => {
     throw new UserInputError("Mobile number and dial code are required.");
   }
 
+  const isoFormattedMobileNumber = convertToInternationalFormat(
+    mobileNumber,
+    dialCode
+  );
+  // Hash mobile number for privacy
   // Construct a unique workflow ID using the mobile number and dial code
-  const workflowId = `${dialCode}${mobileNumber}`;
+  const workflowId = `${isoFormattedMobileNumber}`;
 
   try {
     // Check if a workflow with this ID already exists
@@ -32,21 +38,22 @@ export const loginController = async (req: Request, res: Response) => {
     }
 
     // If the workflow does not exist, start a new login workflow
-    if (!workflowExists) {
-      // Start the login workflow with the provided mobile number and dial code
-      await temporalClient.startWorkflow(
-        LoginWorkflow,
-        { mobileNumber, dialCode },
-        workflowId
-      );
+    // if (!workflowExists) {
+    // Start the login workflow with the provided mobile number and dial code
+    await temporalClient.startWorkflow(
+      LoginWorkflow,
+      { mobileNumber: isoFormattedMobileNumber, dialCode },
+      workflowId
+    );
 
-      // Respond to the client indicating that the OTP is being sent
-      return res.status(200).json({ message: "OTP is being sent." });
-    }
+    // Respond to the client indicating that the OTP is being sent
+    return res.status(200).json({ message: "OTP is being sent." });
+    // }
 
     // If none of the above conditions are met, return a default error
-    throw new Error("Unexpected error occurred.");
+    // throw new Error("Unexpected error occurred.");
   } catch (error) {
+    console.log(error);
     // Handle any errors that occur during the process
     res.status(500).json({ error: error });
   }

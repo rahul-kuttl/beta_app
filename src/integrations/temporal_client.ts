@@ -39,7 +39,8 @@ export namespace temporalClient {
       if (error instanceof Error && error.message.includes("not found")) {
         return false;
       }
-      throw error;
+      // throw error;
+      return false;
     }
   }
 

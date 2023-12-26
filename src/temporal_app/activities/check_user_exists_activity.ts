@@ -1,16 +1,15 @@
-import UserModel from "../../models/user_model";
+import UserModel, { IUser, IUserDocument } from "../../models/user_model";
 
 export async function checkUserExistsActivity(
-  mobileNumber: string,
-  dialCode: string
-): Promise<boolean> {
+  mobileNumber: string
+): Promise<IUserDocument> {
   try {
     const user = await UserModel.findOne({
-      mobileNumber: `${dialCode}${mobileNumber}`,
+      mobileNumber: `${mobileNumber}`,
     }).lean();
-    return !!user;
+    return user as IUserDocument;
   } catch (error) {
-    throw new Error("Error checking if user exists: " + error.message);
+    throw new Error("Error checking if user exists: " + error);
   }
 }
 export type TCheckUserExistsActivity = typeof checkUserExistsActivity;

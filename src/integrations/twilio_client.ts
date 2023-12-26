@@ -1,8 +1,9 @@
 import twilio from "twilio";
+import config from "../config/config";
 
 const twilioClient = twilio(
-  process.env.TWILIO_ACCOUNT_SID,
-  process.env.TWILIO_AUTH_TOKEN
+  config.twilioConfig.accountSid,
+  config.twilioConfig.authToken
 );
 
 export default twilioClient;

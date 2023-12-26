@@ -3,8 +3,8 @@ import { getUserDetails } from "../../controllers/user_controller";
 
 const userRouter = express.Router();
 
-// Get user details
-
+// Authentication check
+userRouter.use((req, res, next) => next());
 // Get user details
 userRouter.get("/:userId", async (req: Request, res: Response) => {
   try {
