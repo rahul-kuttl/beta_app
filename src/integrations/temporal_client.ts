@@ -36,7 +36,7 @@ export namespace temporalClient {
       await handle.describe();
       return true;
     } catch (error) {
-      if (error.message.includes("not found")) {
+      if (error instanceof Error && error.message.includes("not found")) {
         return false;
       }
       throw error;

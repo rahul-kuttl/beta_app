@@ -15,7 +15,7 @@ async function runWorker() {
       checkUserExistsActivity,
       createNewUserActivity,
     },
-    taskQueue: process.env.TEMPORAL_USER_TASK_QUEUE,
+    taskQueue: process.env.TEMPORAL_USER_TASK_QUEUE || "ll",
   });
 
   // Start listening for tasks from the Temporal service

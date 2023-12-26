@@ -11,7 +11,7 @@ userRouter.get("/:userId", async (req: Request, res: Response) => {
     const userDetails = await getUserDetails(req.params.userId);
     res.status(200).json(userDetails);
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    res.status(400).json({ error: error });
   }
 });
 

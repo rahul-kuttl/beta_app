@@ -48,6 +48,6 @@ export const loginController = async (req: Request, res: Response) => {
     throw new Error("Unexpected error occurred.");
   } catch (error) {
     // Handle any errors that occur during the process
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ error: error });
   }
 };
