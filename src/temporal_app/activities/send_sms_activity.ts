@@ -1,13 +1,15 @@
-import { sendSms } from "../../services/sms_service";
+import twilioClient from "../../integrations/twilio_client";
 
 export async function sendSmsActivity(
   mobileNumber: string,
   otp: string
 ): Promise<void> {
-  try {
-    // await sendSms(mobileNumber, `Your OTP is: ${otp}`);
-    await sendSms(mobileNumber, `Your OTP for login is ${otp}. From Kuttl!`);
-  } catch (error) {
-    throw new Error("Error sending SMS: " + error.message);
-  }
+  const message = `Your OTP is: ${otp}`;
+  await twilioClient.messages.create({
+    body: message,
+    to: mobileNumber,
+    from: process.env.TWILIO_PHONE_NUMBER,
+  });
 }
+
+export type TSendSmsActivity = typeof sendSmsActivity;

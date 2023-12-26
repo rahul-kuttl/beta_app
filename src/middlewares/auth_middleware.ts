@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import UserModel from "../models/user_model";
 
 export const authenticate = async (
-  req: Request,
+  req: Request & { user: unknown },
   res: Response,
   next: NextFunction
 ) => {
@@ -13,8 +13,10 @@ export const authenticate = async (
       return res.status(401).send("Access Denied: No token provided.");
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await UserModel.findOne({ _id: decoded.id }).lean();
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || "hh") as {
+      id: string;
+    };
+    const user = await UserModel.findOne({ _id: decoded?.id }).lean();
     if (!user) {
       return res.status(400).send("Invalid token.");
     }

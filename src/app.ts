@@ -7,6 +7,7 @@ import express, {
 } from "express";
 import mongoose from "mongoose";
 import config from "./config/config";
+import authRouter from "./routes/user/auth_route";
 // import router from './routes/userDetailRoute.js';
 import userRouter from "./routes/user/user_route";
 
@@ -26,11 +27,12 @@ app.get("/health-check", (req: Request, res: Response) => {
   res.json("Hello world");
 });
 
+app.use("/authentication", authRouter);
 // Routes
 app.use("/user", userRouter);
 
 // Error handling middleware, Keep routes above this
-app.use((err, req, res, next) => {
+app.use((err: unknown, req: Request, res: Response, next: unknown) => {
   res.status(500).send("Internal Server Error");
 });
 // userRouter for handling user-related routes

@@ -13,3 +13,4 @@ export async function checkUserExistsActivity(
     throw new Error("Error checking if user exists: " + error.message);
   }
 }
+export type TCheckUserExistsActivity = typeof checkUserExistsActivity;

@@ -1,5 +1,8 @@
-import { generateRandomOtp } from "../../utils/otp_util";
+import crypto from "crypto";
 
 export async function generateOtpActivity(): Promise<string> {
-  return generateRandomOtp();
+  const otp = crypto.randomBytes(3).toString("hex"); // Generates a 6-character hexadecimal OTP
+  return otp;
 }
+
+export type TGenerateOtpActivity = typeof generateOtpActivity;

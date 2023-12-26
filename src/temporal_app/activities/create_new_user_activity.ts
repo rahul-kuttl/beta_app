@@ -14,3 +14,5 @@ export async function createNewUserActivity(
     throw new Error("Error creating new user: " + error.message);
   }
 }
+
+export type TCreateNewUserActivity = typeof createNewUserActivity;

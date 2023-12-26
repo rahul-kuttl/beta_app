@@ -1,57 +1,70 @@
 import {
-  Context,
-  proxyActivities,
-  sleep,
   defineSignal,
-  defineQuery,
+  setHandler,
+  sleep,
+  proxyActivities,
 } from "@temporalio/workflow";
-import {
-  generateOtpActivity,
-  sendSmsActivity,
-  checkUserExistsActivity,
-  createNewUserActivity,
+import type {
+  TGenerateOtpActivity,
+  TSendSmsActivity,
+  TCheckUserExistsActivity,
+  TCreateNewUserActivity,
 } from "../activities";
-import { UserInputError } from "../../utils/errors";
 
-export interface LoginWorkflowInput {
+const activities = proxyActivities<{
+  generateOtpActivity: TGenerateOtpActivity;
+  sendSmsActivity: TSendSmsActivity;
+  checkUserExistsActivity: TCheckUserExistsActivity;
+  createNewUserActivity: TCreateNewUserActivity;
+}>({
+  startToCloseTimeout: "1 minute",
+});
+
+const continueWithOtpSignal =
+  defineSignal<[{ inputOtp: string }]>("continueWithOtp");
+
+export async function LoginWorkflow({
+  mobileNumber,
+  dialCode,
+}: {
   mobileNumber: string;
   dialCode: string;
-}
+}) {
+  let otp: string | null = null;
+  let isOtpVerified = false;
 
-const signals = {
-  continueWithOtp: defineSignal<{ inputOtp: string }>("otp_submitted"),
-};
+  setHandler(continueWithOtpSignal, async ({ inputOtp }) => {
+    if (otp === inputOtp) {
+      isOtpVerified = true;
+    } else {
+      throw new Error("OTP did not match.");
+    }
+  });
 
-export async function LoginWorkflow(input: LoginWorkflowInput) {
-  const { mobileNumber, dialCode } = input;
-  const activities = proxyActivities({ startToCloseTimeout: "1 minute" });
-
-  // Check if user exists
+  // Check if user exists and create new user if not
   const userExists = await activities.checkUserExistsActivity(
     mobileNumber,
     dialCode
   );
-  let isNewUser = !userExists;
-
-  // Generate OTP
-  const otp = await activities.generateOtpActivity();
-  await activities.sendSmsActivity(mobileNumber, otp);
-
-  // Pause the workflow and wait for the 'continueWithOtp' signal
-  const { inputOtp } = await signals.continueWithOtp;
-
-  // Validate OTP
-  if (inputOtp !== otp) {
-    throw new UserInputError("OTP didn’t match, Try again!");
-  }
-
-  // Handle new user creation
-  if (isNewUser) {
+  if (!userExists) {
     await activities.createNewUserActivity(mobileNumber, dialCode);
   }
 
-  // Generate JWT token
-  // ... Token generation logic goes here
+  // Generate OTP and send it via SMS
+  otp = await activities.generateOtpActivity();
+  await activities.sendSmsActivity(mobileNumber, otp);
 
-  return { message: "Token generated", token };
+  // Wait for OTP submission; adjust time as needed
+  await sleep("2 minutes");
+
+  if (!isOtpVerified) {
+    throw new Error("OTP verification failed.");
+  }
+
+  return {
+    message: "Login successful",
+    mobileNumber,
+    dialCode,
+    isNewUser: !userExists,
+  };
 }

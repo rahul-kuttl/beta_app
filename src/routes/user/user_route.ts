@@ -1,11 +1,9 @@
 import express, { Request, Response } from "express";
-import {
-  createUser,
-  loginUser,
-  getUserDetails,
-} from "../../controllers/user_controller";
+import { getUserDetails } from "../../controllers/user_controller";
 
 const userRouter = express.Router();
+
+// Get user details
 
 // Get user details
 userRouter.get("/:userId", async (req: Request, res: Response) => {

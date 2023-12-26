@@ -1,4 +1,4 @@
-import twilioClient from "../integrations/twilio";
+import twilioClient from "../integrations/twilio_client";
 
 export async function sendSms(to: string, body: string) {
   try {
