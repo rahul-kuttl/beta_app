@@ -1,26 +1,15 @@
-// src/utils/aws.util.ts
-import AWS from "aws-sdk";
+import twilioClient from "../integrations/twilio";
 
-const sns = new AWS.SNS({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: process.env.AWS_REGION,
-});
-
-export const sendOtp = async (
-  mobileNumber: string,
-  otp: string
-): Promise<void> => {
-  const params = {
-    Message: `Your OTP is: ${otp}`,
-    PhoneNumber: mobileNumber,
-    MessageAttributes: {
-      "AWS.SNS.SMS.SenderID": {
-        "DataType": "String",
-        "StringValue": "YourSenderID",
-      },
-    },
-  };
-
-  await sns.publish(params).promise();
-};
+export async function sendSms(to: string, body: string) {
+  try {
+    const message = await twilioClient.messages.create({
+      body,
+      from: process.env.TWILIO_PHONE_NUMBER,
+      to,
+    });
+    return message.sid;
+  } catch (error) {
+    console.error("Error sending SMS:", error);
+    throw error;
+  }
+}

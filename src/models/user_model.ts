@@ -6,6 +6,9 @@ export interface IUser {
   mobileNumber: string;
   password: string;
   tokenLastAccessed: Date;
+  appOnboarding: {
+    isComplete: boolean;
+  };
 }
 
 // Interface for the User document
@@ -20,6 +23,9 @@ const UserSchema: Schema<IUserDocument> = new Schema(
     mobileNumber: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     tokenLastAccessed: { type: Date, default: Date.now },
+    appOnboarding: {
+      isComplete: { type: Boolean, required: true },
+    },
   },
   { timestamps: true }
 );
@@ -33,4 +39,6 @@ UserSchema.pre<IUserDocument>("save", async function (next) {
 });
 
 // Export the model
-export default mongoose.model<IUserDocument>("User", UserSchema);
+const UserModel = mongoose.model<IUserDocument>("User", UserSchema);
+
+export default UserModel;

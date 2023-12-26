@@ -1,38 +1,42 @@
 import { Request, Response } from "express";
-import jwt from "jsonwebtoken";
-import bcrypt from "bcrypt";
-import User from "../models/user_model";
-// TODO: use via env
-import config from "../config/config";
+import { temporalClient } from "../temporal_app/temporal_client";
+import { LoginWorkflow } from "../temporal_app/workflows/login_workflow";
+import { UserInputError } from "../utils/errors";
 
-export const login = async (req: Request, res: Response) => {
+export const loginController = async (req: Request, res: Response) => {
+  const { mobileNumber, dialCode, otp } = req.body;
+
+  // Validate input
+  if (!mobileNumber || !dialCode) {
+    throw new UserInputError("Mobile number and dial code are required.");
+  }
+
+  // Workflow ID to maintain idempotency
+  const workflowId = `${dialCode}${mobileNumber}`;
+
   try {
-    const { mobileNumber, otp } = req.body;
+    const workflow = await temporalClient.getHandle(workflowId);
 
-    // Validate mobile number and OTP
-    // Implement OTP verification logic here
-
-    // Find the user by mobile number
-    const user = await User.findOne({ mobileNumber });
-
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
+    // If the workflow is already running, and OTP is provided
+    if (workflow && otp) {
+      await workflow.signal.continueWithOtp({ inputOtp: otp });
+      const result = await workflow.result();
+      return res.status(200).json(result);
     }
 
-    // Verify OTP here
+    // If the workflow is not running, start a new one
+    if (!workflow) {
+      const loginWorkflow = await temporalClient.start(LoginWorkflow, {
+        args: [{ mobileNumber, dialCode }],
+        workflowId,
+        taskQueue: "login-task-queue",
+      });
 
-    // Generate JWT token
-    const token = jwt.sign({ userId: user._id }, config.jwtSecret, {
-      expiresIn: process.env.JWT_SECRET_EXPIRY,
-    });
-
-    // Update tokenLastAccessed for the user
-    user.tokenLastAccessed = new Date();
-    await user.save();
-
-    res.status(200).json({ token });
+      // Await the first return from the workflow
+      const message = await loginWorkflow.result();
+      return res.status(200).json(message);
+    }
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+    res.status(500).json({ error: error.message });
   }
 };

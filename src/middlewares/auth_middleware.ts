@@ -1,37 +1,27 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import config from "../config/config";
+import UserModel from "../models/user_model";
 
-// Function to verify JWT token
-const verifyToken = (token: string) => {
-  try {
-    return jwt.verify(token, config.jwtSecret);
-  } catch (error) {
-    return null;
-  }
-};
-
-// Middleware for checking authentication
-export const requireAuth = (
+export const authenticate = async (
   req: Request,
   res: Response,
   next: NextFunction
 ) => {
-  const token = req.headers.authorization?.split(" ")[1];
+  try {
+    const token = req.headers.authorization?.split(" ")[1];
+    if (!token) {
+      return res.status(401).send("Access Denied: No token provided.");
+    }
 
-  if (!token) {
-    return res.status(401).json({ message: "No token provided" });
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await UserModel.findOne({ _id: decoded.id }).lean();
+    if (!user) {
+      return res.status(400).send("Invalid token.");
+    }
+
+    req.user = user;
+    next();
+  } catch (error) {
+    res.status(400).send("Invalid token.");
   }
-
-  const decodedToken = verifyToken(token);
-
-  if (!decodedToken) {
-    return res.status(401).json({ message: "Invalid or expired token" });
-  }
-
-  req.user = decodedToken; // Add the decoded token to the request object
-  next();
 };
-
-// Example usage in routes:
-// router.get('/protected-route', requireAuth, (req, res) => { ... });

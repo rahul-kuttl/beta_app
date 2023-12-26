@@ -45,6 +45,8 @@ export async function loginUser(reqBody: any) {
   return token;
 }
 
+// these kind of function shouldn't be in global scope,
+// should always be accessed via verification
 // Function to get user details
 export async function getUserDetails(userId: string) {
   const user = await User.findById(userId);
