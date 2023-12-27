@@ -34,15 +34,12 @@ export async function LoginWorkflow({
   mobileNumber: string;
   dialCode: string;
 }) {
-  let otp: string | null = null;
+  let generatedOtp: string | null = null;
   let isOtpVerified = false;
+  let isNewUser = false;
 
   setHandler(continueWithOtpSignal, async ({ inputOtp }) => {
-    if (otp === inputOtp) {
-      isOtpVerified = true;
-    } else {
-      throw new Error("OTP did not match.");
-    }
+    isOtpVerified = generatedOtp === inputOtp;
   });
 
   // Check if user exists and create new user if not
@@ -50,6 +47,7 @@ export async function LoginWorkflow({
     mobileNumber
   );
   if (!user) {
+    isNewUser = true;
     user = await activities.createNewUserActivity(mobileNumber);
   }
 
@@ -58,15 +56,18 @@ export async function LoginWorkflow({
   }
 
   // Generate OTP and send it via SMS
-  otp = await activities.generateOtpActivity();
-  await activities.sendSmsActivity(mobileNumber, otp);
+  generatedOtp = await activities.generateOtpActivity();
+  await activities.sendSmsActivity(mobileNumber, generatedOtp);
 
   // Wait for OTP submission; adjust time as needed - ToDo find better way to wait!.
   // Currently if the signal comes early even then it will wait for 2 mins before generating the token
-  await sleep("1 minutes");
+  await sleep("10 minutes");
 
   if (!isOtpVerified) {
-    throw new Error("OTP verification failed.");
+    return {
+      message: "OTP didn't match",
+      error: true,
+    };
   }
 
   const token = await activities.generateTokenActivity(
@@ -76,7 +77,7 @@ export async function LoginWorkflow({
     message: "Login successful",
     mobileNumber,
     dialCode,
-    isNewUser: !user,
+    isNewUser,
     token,
   };
 }

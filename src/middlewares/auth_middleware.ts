@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import UserModel from "../models/user_model";
+import UserModel, { IUserDocument } from "../models/user_model";
 
 export const authenticate = async (
-  req: Request & { user: unknown },
+  req: Request,
   res: Response,
   next: NextFunction
 ) => {
@@ -21,7 +21,8 @@ export const authenticate = async (
       return res.status(400).send("Invalid token.");
     }
 
-    req.user = user;
+    // @ts-ignore
+    req.user = user as IUserDocument;
     next();
   } catch (error) {
     res.status(400).send("Invalid token.");
