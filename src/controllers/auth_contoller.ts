@@ -30,6 +30,8 @@ export const loginController = async (req: Request, res: Response) => {
       const workflowStatus = await temporalClient.checkWorkflowStatus(
         workflowId
       );
+      // ToDo: analyze & fix race condition here. for now since frontend has
+      // timeout based otp generation, so we can go in beta.
       if (workflowStatus === "RUNNING") {
         if (otp) {
           // Signal the workflow with the provided OTP
@@ -44,6 +46,7 @@ export const loginController = async (req: Request, res: Response) => {
           return res.status(200).json({ message: "OTP is mandatory" });
         }
       } else {
+        // ToDo: Sometimes workflow is getting created with no duplicate policy
         // Start the login workflow with the provided mobile number and dial code
         await temporalClient.startDuplicateWorkflow(
           LoginWorkflow,
