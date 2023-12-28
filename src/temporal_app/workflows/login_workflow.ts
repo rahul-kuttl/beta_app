@@ -91,8 +91,10 @@ export async function LoginWorkflow(
   );
 
   // Generate OTP and send it via SMS
-  generatedOtp = await activities.generateOtpActivity();
-  await activities.sendSmsActivity(mobileNumber, generatedOtp);
+  // generatedOtp = await activities.generateOtpActivity();
+  generatedOtp = "000000";
+
+  // await activities.sendSmsActivity(mobileNumber, generatedOtp);
 
   // Set a timeout for OTP verification
   const otpVerificationTimeout = "3 minutes";
