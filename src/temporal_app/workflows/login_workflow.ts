@@ -1,83 +1,149 @@
 import {
+  proxyActivities,
   defineSignal,
   setHandler,
   sleep,
-  proxyActivities,
+  condition,
 } from "@temporalio/workflow";
 import { IUserDocument } from "../../models/user_model";
-import { generateToken } from "../../utils/jwt_util";
 import type {
   TGenerateOtpActivity,
   TSendSmsActivity,
   TCheckUserExistsActivity,
   TCreateNewUserActivity,
   TGenerateTokenActivity,
+  TGetCurrentTimeActivity,
 } from "../activities";
 
+// Define activities
 const activities = proxyActivities<{
   generateOtpActivity: TGenerateOtpActivity;
   sendSmsActivity: TSendSmsActivity;
   checkUserExistsActivity: TCheckUserExistsActivity;
   createNewUserActivity: TCreateNewUserActivity;
   generateTokenActivity: TGenerateTokenActivity;
+  getCurrentTimeActivity: TGetCurrentTimeActivity;
 }>({
-  startToCloseTimeout: "5 minute",
+  startToCloseTimeout: "5 minutes",
 });
 
+// Define signals
 const continueWithOtpSignal =
-  defineSignal<[{ inputOtp: string }]>("continueWithOtp");
+  defineSignal<{ inputOtp: string }[]>("continueWithOtp");
 
-export async function LoginWorkflow({
-  mobileNumber,
-  dialCode,
-}: {
+export interface LoginWorkflowInput {
   mobileNumber: string;
   dialCode: string;
-}) {
+}
+
+export interface LoginWorkflowResult {
+  error: {
+    hasError: boolean;
+    list: string[];
+  };
+  data?: {
+    message: string;
+    mobileNumber: string;
+    dialCode: string;
+    isNewUser: boolean;
+    token?: string;
+  };
+  message: string;
+}
+
+export async function LoginWorkflow(
+  input: LoginWorkflowInput
+): Promise<LoginWorkflowResult> {
+  const { mobileNumber, dialCode } = input;
   let generatedOtp: string | null = null;
   let isOtpVerified = false;
   let isNewUser = false;
+  let user: IUserDocument | null = null;
+  let errors: string[] = [];
 
-  setHandler(continueWithOtpSignal, async ({ inputOtp }) => {
-    isOtpVerified = generatedOtp === inputOtp;
-  });
+  // Get the current time from the workflow context
+  const workflowStartTime = await activities.getCurrentTimeActivity();
 
-  // Check if user exists and create new user if not
-  let user: IUserDocument = await activities.checkUserExistsActivity(
-    mobileNumber
+  // Signal handler for OTP verification
+  setHandler(
+    continueWithOtpSignal,
+    async (signalInput: { inputOtp: string }) => {
+      const currentTime = await activities.getCurrentTimeActivity();
+      const timeElapsed = currentTime - workflowStartTime;
+
+      if (timeElapsed > 180000) {
+        // 3 minutes in milliseconds
+        errors.push("OTP expired");
+        return;
+      }
+
+      if (generatedOtp === signalInput.inputOtp) {
+        user = await activities.checkUserExistsActivity(mobileNumber);
+        if (!user) {
+          user = await activities.createNewUserActivity(mobileNumber);
+          isNewUser = true;
+        }
+        isOtpVerified = true;
+      } else {
+        errors.push("OTP invalid");
+      }
+    }
   );
-  if (!user) {
-    isNewUser = true;
-    user = await activities.createNewUserActivity(mobileNumber);
-  }
-
-  if (!user) {
-    throw new Error("Not able to find user in db & unable to create user");
-  }
 
   // Generate OTP and send it via SMS
   generatedOtp = await activities.generateOtpActivity();
   await activities.sendSmsActivity(mobileNumber, generatedOtp);
 
-  // Wait for OTP submission; adjust time as needed - ToDo find better way to wait!.
-  // Currently if the signal comes early even then it will wait for 2 mins before generating the token
-  await sleep("10 minutes");
+  // Set a timeout for OTP verification
+  const otpVerificationTimeout = "3 minutes";
 
-  if (!isOtpVerified) {
-    return {
-      message: "OTP didn't match",
-      error: true,
-    };
+  try {
+    // Await for OTP verification or expiration
+    await Promise.race([
+      condition(() => isOtpVerified),
+      sleep(otpVerificationTimeout),
+    ]);
+
+    if (!isOtpVerified) {
+      errors.push("OTP verification timed out");
+    }
+  } catch (e) {
+    // Handle possible exceptions that could occur in the race condition
+    errors.push(`Error during OTP verification`);
   }
 
-  const token = await activities.generateTokenActivity(
-    user._id?.toString() || ""
-  ); // fix this
-  return {
-    message: "Login successful",
-    mobileNumber,
-    dialCode,
-    isNewUser,
-    token,
-  };
+  if (user === null) {
+    errors.push(`Unable to create or fetch user`);
+  }
+
+  // Generate the result based on whether there was an error or not
+  if (errors.length === 0) {
+    // @ts-ignore
+    const userId = user ? user?._id : "";
+    const token = await activities.generateTokenActivity(userId);
+    return {
+      error: {
+        hasError: false,
+        list: [],
+      },
+      data: {
+        message: "Login successful",
+        mobileNumber,
+        dialCode,
+        isNewUser,
+        token,
+      },
+      message: "User logged in successfully",
+    };
+  } else {
+    return {
+      error: {
+        hasError: true,
+        list: errors,
+      },
+      // @ts-ignore
+      data: {},
+      message: "OTP verification failed",
+    };
+  }
 }

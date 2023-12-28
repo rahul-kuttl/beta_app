@@ -5,6 +5,7 @@ import {
   checkUserExistsActivity,
   createNewUserActivity,
   generateTokenActivity,
+  getCurrentTimeActivity,
 } from "../activities";
 import mongoose from "mongoose";
 import config from "../../config/config";
@@ -23,6 +24,7 @@ async function runWorker() {
       checkUserExistsActivity,
       createNewUserActivity,
       generateTokenActivity,
+      getCurrentTimeActivity,
     },
     taskQueue: process.env.TEMPORAL_USER_TASK_QUEUE || "ll",
   });
@@ -35,5 +37,5 @@ async function runWorker() {
 
 runWorker().catch((err) => {
   console.error(err);
-  process.exit(1);
+  // process.exit(1);
 });

@@ -3,6 +3,7 @@ import { temporalClient } from "../integrations/temporal_client";
 import { LoginWorkflow } from "../temporal_app/workflows/login_workflow";
 import { UserInputError } from "../utils/error_util";
 import { convertToInternationalFormat } from "../utils/mobile_number";
+import { WorkflowIdReusePolicy } from "@temporalio/client";
 
 export const loginController = async (req: Request, res: Response) => {
   // Extract mobile number, dial code, and OTP from the request body
@@ -25,22 +26,43 @@ export const loginController = async (req: Request, res: Response) => {
     // Check if a workflow with this ID already exists
     const workflowExists = await temporalClient.checkWorkflowExists(workflowId);
 
-    // If the workflow exists and OTP is provided, handle OTP submission
-    if (workflowExists && otp) {
-      // Signal the workflow with the provided OTP
-      await temporalClient.signalWorkflow(workflowId, "continueWithOtp", {
-        inputOtp: otp,
-      });
+    if (workflowExists) {
+      const workflowStatus = await temporalClient.checkWorkflowStatus(
+        workflowId
+      );
+      if (workflowStatus === "RUNNING") {
+        if (otp) {
+          // Signal the workflow with the provided OTP
+          await temporalClient.signalWorkflow(workflowId, "continueWithOtp", {
+            inputOtp: otp,
+          });
 
-      // Wait for the result of the workflow (e.g., successful login or error)
-      const result = await temporalClient.getWorkflowResult(workflowId);
-      return res.status(200).json(result);
+          // Wait for the result of the workflow (e.g., successful login or error)
+          const result = await temporalClient.getWorkflowResult(workflowId);
+          return res.status(200).json(result);
+        } else {
+          return res.status(200).json({ message: "OTP is mandatory" });
+        }
+      } else {
+        // Start the login workflow with the provided mobile number and dial code
+        await temporalClient.startDuplicateWorkflow(
+          LoginWorkflow,
+          { mobileNumber: isoFormattedMobileNumber, dialCode },
+          workflowId
+        );
+        // start new run workflow
+        if (otp) {
+          return res.status(200).json({ message: "OTP is being resent" });
+        } else {
+          return res.status(200).json({ message: "OTP is being sent" });
+        }
+      }
     }
 
     // If the workflow does not exist, start a new login workflow
     // if (!workflowExists) {
     // Start the login workflow with the provided mobile number and dial code
-    await temporalClient.startWorkflow(
+    await temporalClient.startDuplicateWorkflow(
       LoginWorkflow,
       { mobileNumber: isoFormattedMobileNumber, dialCode },
       workflowId

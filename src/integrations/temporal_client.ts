@@ -1,5 +1,16 @@
-import { WorkflowClient, WorkflowHandle } from "@temporalio/client";
+import {
+  WorkflowClient,
+  WorkflowHandle,
+  Workflow,
+  WorkflowIdReusePolicy,
+} from "@temporalio/client";
 
+export enum WorkflowStatus {
+  Running = "RUNNING",
+  Completed = "COMPLETED",
+  Failed = "FAILED",
+  NotFound = "NOT_FOUND",
+}
 // Initialize the WorkflowClient
 const client = new WorkflowClient();
 
@@ -14,6 +25,20 @@ export namespace temporalClient {
       args: [args],
       workflowId,
       taskQueue: process.env.TEMPORAL_USER_TASK_QUEUE || "kk",
+    });
+  }
+  // Function to start a workflow
+  export async function startDuplicateWorkflow<T extends object>(
+    workflow: (args: T) => Promise<any>,
+    args: T,
+    workflowId: string
+  ): Promise<WorkflowHandle> {
+    return await client.start(workflow, {
+      args: [args],
+      workflowId,
+      taskQueue: process.env.TEMPORAL_USER_TASK_QUEUE || "kk",
+      workflowIdReusePolicy:
+        WorkflowIdReusePolicy.WORKFLOW_ID_REUSE_POLICY_ALLOW_DUPLICATE,
     });
   }
 
@@ -36,10 +61,6 @@ export namespace temporalClient {
       await handle.describe();
       return true;
     } catch (error) {
-      if (error instanceof Error && error.message.includes("not found")) {
-        return false;
-      }
-      // throw error;
       return false;
     }
   }
@@ -51,4 +72,18 @@ export namespace temporalClient {
   }
 
   export const clientInstance = client;
+
+  export async function checkWorkflowStatus(
+    workflowId: string
+  ): Promise<string> {
+    try {
+      const handle = await client.getHandle(workflowId);
+      const description = await handle.describe();
+
+      return description.status.name;
+    } catch (error) {
+      return "not found";
+      console.error("Error checking workflow status:", error);
+    }
+  }
 }
