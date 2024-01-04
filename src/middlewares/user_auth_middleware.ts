@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import UserModel, { IUserDocument } from "../models/user_model";
 
-export const authenticate = async (
+export const authenticateUser = async (
   req: Request,
   res: Response,
   next: NextFunction
