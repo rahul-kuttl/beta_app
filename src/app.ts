@@ -11,6 +11,7 @@ import purchaseRoutes from './routes/purchase/purchase_router';
 import lineItemRoutes from './routes/purchase/line_items_router';
 //import { handleFileUpload } from "./utils/upload_handler";
 import { getPresignedUrlForUpload } from './controllers/purchase_controller';
+import { handleUploadConfirmation } from "./utils/upload_handler";
 
 const app: Application = express();
 
@@ -43,6 +44,10 @@ app.use("/user", userRouter);
 // File upload route
 //app.post('/upload', upload.single('file'), handleFileUpload); // Ensure multer processes the file upload
 app.get('/upload-file', getPresignedUrlForUpload);
+
+// route for upload confirmation
+app.post('/upload/confirmation', handleUploadConfirmation);
+
 // Purchase related actions
 app.use('/purchase', purchaseRoutes);
 

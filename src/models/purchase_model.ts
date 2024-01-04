@@ -42,4 +42,4 @@ const purchaseSchema = new Schema<IPurchase>({
     purchaseItems: [purchaseItemSchema]
 });
 
-export const Purchase = mongoose.model<IPurchase>('Purchase', purchaseSchema,'purchase');
+export const Purchase = mongoose.model<IPurchase>('Purchase', purchaseSchema,'purchase');// The third parameter ('purchase') here specifies the name of the MongoDB collection to which this model corresponds.
