@@ -16,4 +16,4 @@ const fileMetaSchema = new Schema<IFileMeta>({
   uploadDate: { type: Date, default: Date.now } // Default to the current date/time
 });
 
-export const FileMeta = mongoose.model<IFileMeta>('FileMeta', fileMetaSchema, 'object_meta');
+export const FileMeta = mongoose.model<IFileMeta>('FileMeta',fileMetaSchema,'object_meta');
