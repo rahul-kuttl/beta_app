@@ -18,7 +18,7 @@ import purchaseRoutes from './routes/purchase/purchase_router';
 import lineItemRoutes from './routes/purchase/line_items_router';
 //import { handleFileUpload } from "./utils/upload_handler";
 import { getPresignedUrlForUpload } from './controllers/purchase_controller';
-import { handleUploadConfirmation } from "./utils/upload_handler";
+import { handleUploadConfirmation } from './utils/upload_handler';
 
 const app: Application = express();
 
@@ -41,7 +41,7 @@ app.get('/health-check', (req: Request, res: Response) => {
 });
 
 // Authentication route
-//app.use("/authentication", authRouter);
+app.use('/authentication', authRouter);
 
 // Middleware for authenticating subsequent routes
 //app.use(authenticate); // Applies to all subsequent routes
