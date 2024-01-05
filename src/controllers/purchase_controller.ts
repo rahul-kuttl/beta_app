@@ -29,8 +29,8 @@ export const getPresignedUrlForUpload = async (req: Request, res: Response) => {
             return res.status(HTTP_BAD_REQUEST).send(`Invalid file type: only ${ALLOWED_FILE_TYPES.join(', ')} files are allowed.`);
         }
 
-        const fileKey = `${uuidv4()}-${filename}`;
-        const presignedUrl = await generatePresignedUrl(config.minioConfig.bucketName, fileKey, 60);
+        const fileKey = `${filename}`;
+        const presignedUrl = await generatePresignedUrl(config.minioConfig.bucketName, fileKey,);
 
         res.status(HTTP_OK).json({ presignedUrl, fileKey });
     } catch (error) {
