@@ -1,5 +1,6 @@
 import express, { Request, Response } from 'express';
 import { getPresignedUrlForUpload } from '../../../controllers/purchase_controller';
+import { handleUploadConfirmation } from '../../../utils/upload_handler';
 
 const manageSecureVaultRouter = express.Router();
 
@@ -11,6 +12,10 @@ interface VaultParams {
 // File upload route
 //app.post('/upload', upload.single('file'), handleFileUpload); // Ensure multer processes the file upload
 manageSecureVaultRouter.get('/pre-signed-url', getPresignedUrlForUpload);
+/*
+need to setup limit on fileSize on backend 
+*/ 
+manageSecureVaultRouter.post('/upload-confirmation', handleUploadConfirmation);
 
 // Delete all media for a user
 manageSecureVaultRouter.delete(
