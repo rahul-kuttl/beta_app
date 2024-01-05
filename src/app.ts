@@ -44,7 +44,7 @@ app.get('/health-check', (req: Request, res: Response) => {
 app.use('/platform', platformRouter);
 
 // Registered user related actions
-app.use('/user', userRouter);
+app.use('/user_app', userRouter);
 
 // Error handling middleware, placed after all routes
 app.use((err: Error, req: Request, res: Response, next: Function) => {
