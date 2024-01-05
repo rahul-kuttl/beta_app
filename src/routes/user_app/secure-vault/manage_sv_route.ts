@@ -47,6 +47,10 @@ manageSecureVaultRouter.post(
     res.json('Archived for 6months permanently deletion window');
   },
 );
+
+manageSecureVaultRouter.post('/metric/global', (req, res, next) => {
+  res.json('Saved aggregate');
+});
 // Error handling middleware, placed after all routes
 manageSecureVaultRouter.use(
   (err: Error, req: Request, res: Response, next: Function) => {

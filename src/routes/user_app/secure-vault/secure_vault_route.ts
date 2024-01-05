@@ -15,6 +15,7 @@ import { authenticateUser } from '../../../middlewares/user_auth_middleware';
 import svMediaRouter from './sv_media_route';
 import manageSecureVaultRouter from './manage_sv_route';
 import activityLogRouter from './activity_log_route';
+import svMetricRouter from './sv_metric_route';
 
 // TypeScript interfaces
 interface VaultParams {
@@ -53,6 +54,7 @@ secureVaultRouter.get('/health', async (req: Request, res: Response) => {
 secureVaultRouter.use('/media', svMediaRouter);
 secureVaultRouter.use('/activity-log', activityLogRouter);
 secureVaultRouter.use('/manage', manageSecureVaultRouter);
+secureVaultRouter.use('/metric/', svMetricRouter);
 
 // List Shared Access
 secureVaultRouter.get(
