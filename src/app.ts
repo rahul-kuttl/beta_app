@@ -11,14 +11,14 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import config from './config/config';
 import { authenticateUser } from './middlewares/user_auth_middleware';
-import authRouter from './routes/user/auth_route';
+import userAuthRouter from './routes/platform/authentication/user_auth_route';
 // import router from './routes/userDetailRoute.js'; // Original code, JS file import commented out
-import userRouter from './routes/user/user_route';
-import purchaseRoutes from './routes/purchase/purchase_router';
-import lineItemRoutes from './routes/purchase/line_items_router';
+import userRouter from './routes/user_app/user_route';
+
 //import { handleFileUpload } from "./utils/upload_handler";
 import { getPresignedUrlForUpload } from './controllers/purchase_controller';
 import { handleUploadConfirmation } from './utils/upload_handler';
+import platformRouter from './routes/platform/platform_route';
 
 const app: Application = express();
 
@@ -40,27 +40,11 @@ app.get('/health-check', (req: Request, res: Response) => {
   res.json({ message: 'Hello world' }); // Changed to send JSON object for consistency
 });
 
-// Authentication route
-app.use('/authentication', authRouter);
-
-// Middleware for authenticating subsequent routes
-//app.use(authenticate); // Applies to all subsequent routes
+// Contains Authentication route
+app.use('/platform', platformRouter);
 
 // Registered user related actions
 app.use('/user', userRouter);
-
-// File upload route
-//app.post('/upload', upload.single('file'), handleFileUpload); // Ensure multer processes the file upload
-app.get('/upload-file', getPresignedUrlForUpload);
-
-// route for upload confirmation
-app.post('/upload/confirmation', handleUploadConfirmation);
-
-// Purchase related actions
-app.use('/purchase', purchaseRoutes);
-
-// Line item related actions
-app.use('/item', lineItemRoutes);
 
 // Error handling middleware, placed after all routes
 app.use((err: Error, req: Request, res: Response, next: Function) => {
