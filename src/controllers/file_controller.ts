@@ -2,6 +2,7 @@
 import { FileMeta } from "../models/file_meta_model";
 
 interface FileData {
+  userId: string;
   filename: string;
   url: string;
   size?: number;
@@ -11,6 +12,7 @@ interface FileData {
 export const saveFileMetadata = async (fileData: FileData): Promise<void> => {
   try {
     const newFileMeta = new FileMeta({
+      userId:fileData.userId,
       filename: fileData.filename,
       url: fileData.url,
       size: fileData.size,

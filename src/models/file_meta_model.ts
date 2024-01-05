@@ -1,6 +1,7 @@
 import mongoose, { Document, Schema } from 'mongoose';
 
 interface IFileMeta extends Document {
+  userId:string;
   filename: string;
   url: string;
   size: number;
@@ -9,6 +10,7 @@ interface IFileMeta extends Document {
 }
 
 const fileMetaSchema = new Schema<IFileMeta>({
+  userId: { type: String, required: true },
   filename: { type: String, required: true },
   url: { type: String, required: true },
   size: { type: Number, required: true },
