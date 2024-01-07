@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 
 export async function generateTokenActivity(userId: string): Promise<string> {
   try {
-    return jwt.sign({ id: userId }, process.env.JWT_SECRET || "kk", {
+    return jwt.sign({ id: userId}, process.env.JWT_SECRET || "kk", {
       expiresIn: "7d",
     });
   } catch (error) {

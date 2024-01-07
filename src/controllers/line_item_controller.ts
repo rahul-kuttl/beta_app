@@ -3,6 +3,7 @@ import { LineItem,ILineItem } from '../models/line_item_model';
 import Logger from '../utils/logger'; // Assuming a Logger utility
 import mongoose,{Document} from 'mongoose';
 
+
 // Constants for HTTP status codes
 const HTTP_OK = 200;
 const HTTP_CREATED = 201;
@@ -15,7 +16,23 @@ const HTTP_INTERNAL_SERVER_ERROR = 500;
  */
 export const addLineItem = async (req: Request, res: Response) => {
     try {
+
         const newLineItem = new LineItem(req.body);
+        const validationError = newLineItem.validateSync();
+
+        if (validationError) {
+            return res.status(HTTP_BAD_REQUEST).send(validationError.message);
+        }
+
+                // Check if itemId already exists in  collection
+                const existsInLineItems = await LineItem.findOne({ itemId: req.body.itemId });
+               
+        
+                if (existsInLineItems) {
+                    return res.status(HTTP_BAD_REQUEST).send('Item ID already exists.');
+                }
+        
+        ;
         await newLineItem.save();
         res.status(HTTP_CREATED).json(newLineItem);
     } catch (error) {
@@ -40,6 +57,11 @@ export const modifyPurchaseItem = async (req: Request, res: Response) => {
  const currentItem = await LineItem.findById(itemId);
  if (!currentItem) {
      return res.status(HTTP_NOT_FOUND).send('Line item not found');
+ }
+
+// Check if itemId is being modified in the request body
+ if (req.body.itemId && req.body.itemId !== currentItem.itemId) {
+    return res.status(HTTP_BAD_REQUEST).send('Modification of Item ID is not allowed.');
  }
 
  // Update the item
@@ -67,7 +89,7 @@ export const modifyPurchaseItem = async (req: Request, res: Response) => {
 };
 
 /**
- * Remove a line item.
+ * Remove a line item.modifyPurchaseItem
  */
 export const removeLineItem = async (req: Request, res: Response) => {
     try {
@@ -121,6 +143,15 @@ export const addLineItems = async (req: Request, res: Response) => {
             return res.status(HTTP_BAD_REQUEST).send('Invalid input: Expected an array of line items');
         }
 
+        
+        for (const lineItem of req.body) {
+            const validationError = new LineItem(lineItem).validateSync();
+            if (validationError) {
+                return res.status(HTTP_BAD_REQUEST).send(validationError.message);
+            }
+        }
+
+
         // Optional: additional validation or transformation on lineItems
 
         const newItems = await LineItem.insertMany(req.body);
@@ -138,17 +169,27 @@ export const addLineItems = async (req: Request, res: Response) => {
  */
 export const modifyPurchaseItems = async (req: Request, res: Response) => {
     try {
-        const updateOps = req.body.lineItems.map((item: ILineItem) => ({
-            updateOne: {
-                filter: { _id: item._id },
-                update: { $set: item }
-            }
-        }));
+// Fetch current states of line items
+const currentItems = await LineItem.find({
+    _id: { $in: req.body.lineItems.map((item: ILineItem) => item._id) }
+});
 
-        // Fetch current states of line items
-        const currentItems = await LineItem.find({
-            _id: { $in: req.body.lineItems.map((item: ILineItem) => item._id) }
-        });
+// Check if itemId is being modified in any line item
+for (const item of req.body.lineItems) {
+    const currentItem = currentItems.find(ci => ci._id.toString() === item._id.toString());
+    if (currentItem && item.itemId && item.itemId !== currentItem.itemId) {
+        return res.status(HTTP_BAD_REQUEST).send(`Modification of Item ID for item ${item._id} is not allowed.`);
+    }
+}
+
+// Prepare bulk update operations
+const updateOps = req.body.lineItems.map((item: ILineItem) => ({
+    updateOne: {
+        filter: { _id: item._id },
+        update: { $set: item }
+    }
+}));
+
 
         // Apply updates and get results
         const result = await LineItem.bulkWrite(updateOps);

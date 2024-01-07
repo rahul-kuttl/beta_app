@@ -8,7 +8,7 @@ import { WorkflowIdReusePolicy } from "@temporalio/client";
 export const loginController = async (req: Request, res: Response) => {
   // Extract mobile number, dial code, and OTP from the request body
   const { mobileNumber, dialCode, otp } = req.body;
-
+console.log(req.body);
   // Validate input: Ensure mobile number and dial code are provided
   if (!mobileNumber || !dialCode) {
     throw new UserInputError("Mobile number and dial code are required.");
@@ -18,6 +18,7 @@ export const loginController = async (req: Request, res: Response) => {
     mobileNumber,
     dialCode
   );
+  console.log(`mobile number is :+${dialCode}-${mobileNumber}`)
   // Hash mobile number for privacy
   // Construct a unique workflow ID using the mobile number and dial code
   const workflowId = `${isoFormattedMobileNumber}`;
@@ -32,15 +33,19 @@ export const loginController = async (req: Request, res: Response) => {
       );
       // ToDo: analyze & fix race condition here. for now since frontend has
       // timeout based otp generation, so we can go in beta.
+      //console.log(workflowExists,workflowStatus)
       if (workflowStatus === "RUNNING") {
         if (otp) {
           // Signal the workflow with the provided OTP
+          //console.log(otp,workflowId)
           await temporalClient.signalWorkflow(workflowId, "continueWithOtp", {
             inputOtp: otp,
+            
           });
 
           // Wait for the result of the workflow (e.g., successful login or error)
           const result = await temporalClient.getWorkflowResult(workflowId);
+          //console.log(result)
           return res.status(200).json(result);
         } else {
           return res.status(200).json({ message: "OTP is mandatory" });

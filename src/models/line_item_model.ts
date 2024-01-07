@@ -27,6 +27,7 @@ interface IBrandDetails extends Document {
 
 // Interface for Line Item
 export interface ILineItem extends Document {
+    itemId: string; 
     brandBanner: string;
     brandName: string;
     itemBanner: string;
@@ -65,6 +66,7 @@ const brandDetailsSchema = new Schema<IBrandDetails>({
 });
 
 const lineItemSchema = new Schema<ILineItem>({
+    itemId: { type: String, required: true ,unique:true},
     brandBanner: String,
     brandName: String,
     itemBanner: String,

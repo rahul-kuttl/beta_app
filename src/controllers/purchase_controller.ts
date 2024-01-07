@@ -65,6 +65,13 @@ export const addMultiplePurchases = async (req: Request, res: Response) => {
 
         // Additional checks or transformations on the purchases array can be done here
 
+        for (const purchase of req.body.purchases) {
+            const validationError = new Purchase(purchase).validateSync();
+            if (validationError) {
+                return res.status(HTTP_BAD_REQUEST).send(validationError.message);
+            }
+        }
+
         // Insert the new purchases into the database
         const newPurchases = await Purchase.insertMany(req.body.purchases);
 
@@ -127,6 +134,28 @@ export const updateMultiplePurchaseItems = async (req: Request, res: Response) =
             return res.status(HTTP_BAD_REQUEST).send('Invalid input: Each update must have a valid id and data');
         }
 
+        
+        // Check for attempts to modify purchaseItemId
+        for (const update of updates) {
+            // Assuming purchaseItemId is directly under update.data
+            if (update.data.purchaseItemId) {
+                return res.status(HTTP_BAD_REQUEST).send('Modification of Purchase Item ID is not allowed.');
+            }
+        }
+
+                // // Fetch current states of purchase items
+                // const currentItems = await Purchase.find({
+                //     _id: { $in: updates.map(update => update.id) }
+                // });
+        
+                // // Check for forbidden updates
+                // for (const update of updates) {
+                //     const currentItem = currentItems.find(item => item._id.toString() === update.id);
+                //     if (currentItem && update.data.purchaseItemId && update.data.purchaseItemId !== currentItem.purchaseItemId) {
+                //         return res.status(HTTP_BAD_REQUEST).send(`Modification of Purchase Item ID for ${update.id} is not allowed.`);
+                //     }
+                // }
+
         const updatePromises = updates.map(update =>
             Purchase.findByIdAndUpdate(update.id, update.data, { new: true }).catch(err => err)
         );
@@ -183,13 +212,24 @@ export const viewPurchase = async (req: Request, res: Response) => {
 export const addPurchase = async (req: Request, res: Response) => {
     try {
         const newPurchase = new Purchase(req.body);
-        const savedPurchase=await newPurchase.save();
+        const validationError = newPurchase.validateSync();
 
-        console.log('Added new purchase:', savedPurchase);
+        if (validationError) {
+            return res.status(HTTP_BAD_REQUEST).send(validationError.message);
+        }
+
+        for (const purchaseItem of newPurchase.purchaseItems) {
+            const existsInPurchases = await Purchase.findOne({ 'purchaseItems.itemDetails.purchaseItemId': purchaseItem.itemDetails.purchaseItemId });
+            if (existsInPurchases) {
+                return res.status(HTTP_BAD_REQUEST).send(`Purchase Item ID ${purchaseItem.itemDetails.purchaseItemId} already exists.`);
+            }
+        }
+
+        await newPurchase.save();
+        console.log('Added new purchase:', newPurchase);
         res.status(HTTP_CREATED).json(newPurchase);
     } catch (error) {
         Logger.error('Error adding purchase', error);
-
         res.status(HTTP_INTERNAL_SERVER_ERROR).send('An error occurred while adding the purchase.');
     }
 };
@@ -233,6 +273,10 @@ export const updatePurchaseItem = async (req: Request, res: Response) => {
         if (!mongoose.isValidObjectId(purchaseId)) {
             return res.status(HTTP_BAD_REQUEST).send('Invalid purchase ID format');
         }
+          // Prevent updating purchaseItemId
+    if (req.body.purchaseItems && req.body.purchaseItems.some((item: { itemDetails: { purchaseItemId: any; }; }) => item.itemDetails && item.itemDetails.purchaseItemId)) {
+        return res.status(HTTP_BAD_REQUEST).send('Modification of Purchase Item ID is not allowed.');
+    }
 
         const updatedPurchase = await Purchase.findByIdAndUpdate(purchaseId, req.body, { new: true });
         if (!updatedPurchase) {

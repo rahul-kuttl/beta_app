@@ -26,7 +26,7 @@ async function runWorker() {
       generateTokenActivity,
       getCurrentTimeActivity,
     },
-    taskQueue: process.env.TEMPORAL_USER_TASK_QUEUE || "ll",
+    taskQueue: process.env.TEMPORAL_USER_TASK_QUEUE || "kk",
   });
 
   // Start listening for tasks from the Temporal service

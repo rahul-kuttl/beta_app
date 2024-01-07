@@ -12,6 +12,10 @@ export async function createNewUserActivity(
     const user = await UserModel.findOne({
       mobileNumber: `${mobileNumber}`,
     }).lean();
+
+    console.log("New user created:", user);
+    
+    
     return user as IUserDocument;
   } catch (error) {
     throw new Error("Error creating new user: " + error);

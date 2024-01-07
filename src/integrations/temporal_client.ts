@@ -44,13 +44,21 @@ export namespace temporalClient {
 
   // Function to signal a workflow
   export async function signalWorkflow(
+   
     workflowId: string,
     signalName: string,
     args: object
   ): Promise<void> {
-    const handle = await client.getHandle(workflowId);
-    await handle.signal(signalName, args);
+    console.log(`Signaling workflow: ${workflowId} with signal: ${signalName} and args:`, args);
+    try {
+      const handle = await client.getHandle(workflowId);
+      await handle.signal(signalName, args);
+      console.log(`Signal sent successfully to workflow: ${workflowId}`);
+    } catch (error) {
+      console.error(`Error signaling workflow: ${workflowId}`, error);
+    }
   }
+  
 
   // Function to check if a workflow exists
   export async function checkWorkflowExists(
