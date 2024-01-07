@@ -1,4 +1,4 @@
-import * as dotenv from "dotenv";
+import * as dotenv from 'dotenv';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -7,7 +7,6 @@ interface MongoDBConfig {
   dbURI: string;
   dbName: string;
 }
-
 
 interface Config {
   mongodb: MongoDBConfig;
@@ -23,23 +22,27 @@ interface Config {
   s3Config: {
     accessKeyId: string;
     secretAccessKey: string;
-    s3_endpoint:string;
-    region:string;
+    s3_endpoint: string;
+    region: string;
   };
   minioConfig: {
-    endPoint: string,
-    useSSL: boolean,
+    endPoint: string;
+    useSSL: boolean;
     accessKeyId: string;
     secretAccessKey: string;
-    bucketName:string;
-    port:number
+    bucketName: string;
+    port: number;
   };
   jwtSecretExpiry: number;
   temporalUserTaskQueue: string;
-
+  temporalCloudAddress: string;
+  temporalNamespace: string;
 }
 
-const parsePort = (portValue: string | undefined, defaultValue: number): number => {
+const parsePort = (
+  portValue: string | undefined,
+  defaultValue: number,
+): number => {
   if (portValue) {
     const parsed = parseInt(portValue, 10);
     if (!isNaN(parsed)) {
@@ -52,35 +55,38 @@ const parsePort = (portValue: string | undefined, defaultValue: number): number 
 // Define configuration based on environment variables
 const config: Config = {
   mongodb: {
-    dbURI: process.env.MONGO_DB_URI || "default_mongo_uri/alpha_data",
-    dbName: process.env.MONGO_DB_NAME || "alpha_data",
+    dbURI: process.env.MONGO_DB_URI || 'default_mongo_uri/alpha_data',
+    dbName: process.env.MONGO_DB_NAME || 'alpha_data',
   },
-  jwtSecret: process.env.JWT_SECRET || "default_jwt_secret",
+  jwtSecret: process.env.JWT_SECRET || 'default_jwt_secret',
   serverConfig: {
-    port: parseInt(process.env.PORT || "3000", 10),
+    port: parseInt(process.env.PORT || '3000', 10),
   },
   twilioConfig: {
-    accountSid: process.env.TWILIO_ACCOUNT_SID || "default_account_sid",
-    authToken: process.env.TWILIO_AUTH_TOKEN || "default_auth_token",
-    fromNumber: process.env.TWILIO_PHONE_NUMBER || "default_phone_number",
+    accountSid: process.env.TWILIO_ACCOUNT_SID || 'default_account_sid',
+    authToken: process.env.TWILIO_AUTH_TOKEN || 'default_auth_token',
+    fromNumber: process.env.TWILIO_PHONE_NUMBER || 'default_phone_number',
   },
   s3Config: {
-    accessKeyId: process.env.S3_ACCESS_KEY_ID || "default_access_key",
-    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || "default_secret_key",
-    s3_endpoint:process.env.S3_ENDPOINT || "default endpoint",
-    region:process.env.S3_REGION || 'ap-south-1'
+    accessKeyId: process.env.S3_ACCESS_KEY_ID || 'default_access_key',
+    secretAccessKey: process.env.S3_SECRET_ACCESS_KEY || 'default_secret_key',
+    s3_endpoint: process.env.S3_ENDPOINT || 'default endpoint',
+    region: process.env.S3_REGION || 'ap-south-1',
   },
   minioConfig: {
-    endPoint: process.env.MINIO_ENDPOINT || "default_endpoint",
-    useSSL: process.env.MINIO_SSLFLAG?.toLowerCase() === "true", // Correctly parse the boolean value
-    accessKeyId: process.env.MINIO_ACCESS_KEY_ID || "default_access_key",
-    secretAccessKey: process.env.MINIO_SECRET_ACCESS_KEY || "default_secret_key",
-    bucketName:process.env.MINIO_BUCKET_NAME|| "default_bucket_name",
-    port:parsePort(process.env.MINIO_BUCKET_PORT,9000),
+    endPoint: process.env.MINIO_ENDPOINT || 'default_endpoint',
+    useSSL: process.env.MINIO_SSLFLAG?.toLowerCase() === 'true', // Correctly parse the boolean value
+    accessKeyId: process.env.MINIO_ACCESS_KEY_ID || 'default_access_key',
+    secretAccessKey:
+      process.env.MINIO_SECRET_ACCESS_KEY || 'default_secret_key',
+    bucketName: process.env.MINIO_BUCKET_NAME || 'default_bucket_name',
+    port: parsePort(process.env.MINIO_BUCKET_PORT, 9000),
   },
-  jwtSecretExpiry: parseInt(process.env.JWT_SECRET_EXPIRY || "10080", 10),
+  jwtSecretExpiry: parseInt(process.env.JWT_SECRET_EXPIRY || '10080', 10),
   temporalUserTaskQueue:
-    process.env.TEMPORAL_USER_TASK_QUEUE || "default_task_queue",
+    process.env.TEMPORAL_USER_TASK_QUEUE || 'default_task_queue',
+  temporalCloudAddress: process.env.TEMPORAL_CLOUD_ADDRESS || 'ld',
+  temporalNamespace: process.env.TEMPORAL_NAMESPACE || 'ss',
 };
 
 export default config;

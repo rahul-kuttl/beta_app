@@ -19,9 +19,17 @@ import userRouter from './routes/user_app/user_route';
 import { getPresignedUrlForUpload } from './controllers/purchase_controller';
 import { handleUploadConfirmation } from './utils/upload_handler';
 import platformRouter from './routes/platform/platform_route';
+import { getClient } from './integrations/temporal_client';
 
 const app: Application = express();
 
+getClient()
+  .then(() => {
+    console.log('temporal connected successfully');
+  })
+  .catch((err: unknown) => {
+    console.log(err);
+  });
 // Connect to MongoDB
 mongoose
   .connect(config.mongodb.dbURI)
