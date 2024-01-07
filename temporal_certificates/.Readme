@@ -1,0 +1,15 @@
+tcld gen ca --org kuttl --validity-period 60d --ca-cert ./temporal-ca-cert --ca-key ./temporal-ca-key
+storing the certificate authority (private) key at ./temporal-ca-key, do not share this key with anyone. confirm: [y/n] y
+certificate authority generated at: ./temporal-ca-cert
+certificate authority key generated at: ./temporal-ca-key
+
+
+tcld gen leaf --org kuttl --validity-period 30d --ca-cert ./temporal-ca-cert --ca-key  ./temporal-ca-key  --cert ./temporal-ca-cert-x509 --key ./temporal-ca-cert-x509-key
+storing the end entity certificate (private) key at ./temporal-ca-cert-x509-key, do not share this key with anyone. confirm: [y/n] y
+end entity certificate generated at: ./temporal-ca-cert-x509
+end entity certificate key generated at: ./temporal-ca-cert-x509-key
+
+Don't let your certificates expire! Add reminders to your calendar to issue new CA certificates well before the expiration dates of the existing ones. Temporal Cloud begins sending notifications 15 days before expiration. For details, see the previous section (How to receive notifications about certificate expiration).
+
+When updating CA certificates, it's important to follow a rollover process (sometimes referred to as "certificate rotation"). Doing so enables your Namespace to serve both CA certificates for a period of time until traffic to your old CA certificate ceases. This prevents any service disruption during the rollover process.
+

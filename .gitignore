@@ -3,4 +3,4 @@ dist/
 .env
 **/*.db
 .DS_Store
-temporal_certificates
+temporal_certificates.*
