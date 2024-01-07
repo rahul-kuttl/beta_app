@@ -116,8 +116,8 @@ export namespace temporalClient {
 
       return description.status.name;
     } catch (error) {
-      return 'not found';
       console.error('Error checking workflow status:', error);
+      return 'not found';
     }
   }
 }

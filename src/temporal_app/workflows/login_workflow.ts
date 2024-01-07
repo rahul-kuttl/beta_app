@@ -4,8 +4,8 @@ import {
   setHandler,
   sleep,
   condition,
-} from "@temporalio/workflow";
-import { IUserDocument } from "../../models/user_model";
+} from '@temporalio/workflow';
+import { IUserDocument } from '../../models/user_model';
 import type {
   TGenerateOtpActivity,
   TSendSmsActivity,
@@ -13,7 +13,7 @@ import type {
   TCreateNewUserActivity,
   TGenerateTokenActivity,
   TGetCurrentTimeActivity,
-} from "../activities";
+} from '../activities';
 
 // Define activities
 const activities = proxyActivities<{
@@ -24,12 +24,12 @@ const activities = proxyActivities<{
   generateTokenActivity: TGenerateTokenActivity;
   getCurrentTimeActivity: TGetCurrentTimeActivity;
 }>({
-  startToCloseTimeout: "5 minutes",
+  startToCloseTimeout: '5 minutes',
 });
 
 // Define signals
 const continueWithOtpSignal =
-  defineSignal<{ inputOtp: string }[]>("continueWithOtp");
+  defineSignal<{ inputOtp: string }[]>('continueWithOtp');
 
 export interface LoginWorkflowInput {
   mobileNumber: string;
@@ -52,7 +52,7 @@ export interface LoginWorkflowResult {
 }
 
 export async function LoginWorkflow(
-  input: LoginWorkflowInput
+  input: LoginWorkflowInput,
 ): Promise<LoginWorkflowResult> {
   const { mobileNumber, dialCode } = input;
   let generatedOtp: string | null = null;
@@ -73,7 +73,7 @@ export async function LoginWorkflow(
 
       if (timeElapsed > 180000) {
         // 3 minutes in milliseconds
-        errors.push("OTP expired");
+        errors.push('OTP expired');
         return;
       }
 
@@ -85,19 +85,19 @@ export async function LoginWorkflow(
         }
         isOtpVerified = true;
       } else {
-        errors.push("OTP invalid");
+        errors.push('OTP invalid');
       }
-    }
+    },
   );
 
   // Generate OTP and send it via SMS
   // generatedOtp = await activities.generateOtpActivity();
-  generatedOtp = "000000";
+  generatedOtp = '000000';
 
   // await activities.sendSmsActivity(mobileNumber, generatedOtp);
 
   // Set a timeout for OTP verification
-  const otpVerificationTimeout = "3 minutes";
+  const otpVerificationTimeout = '3 minutes';
 
   try {
     // Await for OTP verification or expiration
@@ -107,7 +107,7 @@ export async function LoginWorkflow(
     ]);
 
     if (!isOtpVerified) {
-      errors.push("OTP verification timed out");
+      errors.push('OTP verification timed out');
     }
   } catch (e) {
     // Handle possible exceptions that could occur in the race condition
@@ -121,21 +121,21 @@ export async function LoginWorkflow(
   // Generate the result based on whether there was an error or not
   if (errors.length === 0) {
     // @ts-ignore
-    const userId = user ? user?._id : "";
-    const token = await activities.generateTokenActivity(userId);
+    const userId = user ? user?._id : '';
+    const token = await activities.generateTokenActivity(userId.toString());
     return {
       error: {
         hasError: false,
         list: [],
       },
       data: {
-        message: "Login successful",
+        message: 'Login successful',
         mobileNumber,
         dialCode,
         isNewUser,
         token,
       },
-      message: "User logged in successfully",
+      message: 'User logged in successfully',
     };
   } else {
     return {
@@ -145,7 +145,7 @@ export async function LoginWorkflow(
       },
       // @ts-ignore
       data: {},
-      message: "OTP verification failed",
+      message: 'OTP verification failed',
     };
   }
 }
