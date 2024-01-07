@@ -8,13 +8,14 @@ import {
   getCurrentTimeActivity,
 } from '../activities';
 import mongoose from 'mongoose';
-import config from '../../config/config';
+import config from '../../../config/config';
 import fs from 'fs';
 
 // Path to your certificate files
-const certPath = '../../temporal_certificates/temporal-ca-cert-x509';
-const keyPath = '../../temporal_certificates/temporal-ca-cert-x509-key';
-const caPath = '../../temporal_certificates/temporal-ca-cert';
+const certPath = config.temporalCertificatesBasePath + '/temporal-ca-cert-x509';
+const keyPath =
+  config.temporalCertificatesBasePath + '/temporal-ca-cert-x509-key';
+const caPath = config.temporalCertificatesBasePath + '/temporal-ca-cert';
 
 // Load certificates
 const cert = fs.readFileSync(certPath);

@@ -3,6 +3,10 @@ import * as dotenv from 'dotenv';
 // Load environment variables from .env file
 dotenv.config();
 
+import path from 'path';
+
+const rootDir = path.join(__dirname, '..');
+
 interface MongoDBConfig {
   dbURI: string;
   dbName: string;
@@ -37,6 +41,7 @@ interface Config {
   temporalUserTaskQueue: string;
   temporalCloudAddress: string;
   temporalNamespace: string;
+  temporalCertificatesBasePath: string;
 }
 
 const parsePort = (
@@ -87,6 +92,9 @@ const config: Config = {
     process.env.TEMPORAL_USER_TASK_QUEUE || 'default_task_queue',
   temporalCloudAddress: process.env.TEMPORAL_CLOUD_ADDRESS || 'ld',
   temporalNamespace: process.env.TEMPORAL_NAMESPACE || 'ss',
+  temporalCertificatesBasePath:
+    process.env.TEMPORAL_CERTIFICATES_BASE_PATH ||
+    `${rootDir}/temporal_certificates`,
 };
 
 export default config;

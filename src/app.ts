@@ -9,7 +9,7 @@ import express, {
 import mongoose from 'mongoose';
 //import multer from 'multer';
 import cors from 'cors';
-import config from './config/config';
+import config from './../config/config';
 import { authenticateUser } from './middlewares/user_auth_middleware';
 import userAuthRouter from './routes/platform/authentication/user_auth_route';
 // import router from './routes/userDetailRoute.js'; // Original code, JS file import commented out
