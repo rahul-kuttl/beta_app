@@ -5,7 +5,6 @@
     "esModuleInterop": true,
     "target": "ES2021",
     "lib": ["ESNext"],
-    "types": ["node"],
     "allowJs": true,
     "alwaysStrict": true,
     "strictNullChecks": false,
