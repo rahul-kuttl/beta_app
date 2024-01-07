@@ -9,7 +9,7 @@ import express, {
 import mongoose from 'mongoose';
 //import multer from 'multer';
 import cors from 'cors';
-import config from './config/config';
+import config from './../config/config';
 import { authenticateUser } from './middlewares/user_auth_middleware';
 import userAuthRouter from './routes/platform/authentication/user_auth_route';
 // import router from './routes/userDetailRoute.js'; // Original code, JS file import commented out
@@ -19,9 +19,17 @@ import userRouter from './routes/user_app/user_route';
 import { getPresignedUrlForUpload } from './controllers/purchase_controller';
 import { handleUploadConfirmation } from './utils/upload_handler';
 import platformRouter from './routes/platform/platform_route';
+import { getClient } from './integrations/temporal_client';
 
 const app: Application = express();
 
+getClient()
+  .then(() => {
+    console.log('temporal connected successfully');
+  })
+  .catch((err: unknown) => {
+    console.log(err);
+  });
 // Connect to MongoDB
 mongoose
   .connect(config.mongodb.dbURI)
@@ -44,7 +52,7 @@ app.get('/health-check', (req: Request, res: Response) => {
 app.use('/platform', platformRouter);
 
 // Registered user related actions
-app.use('/user', userRouter);
+app.use('/user_app', userRouter);
 
 // Error handling middleware, placed after all routes
 app.use((err: Error, req: Request, res: Response, next: Function) => {

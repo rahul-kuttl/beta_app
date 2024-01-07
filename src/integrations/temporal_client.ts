@@ -1,42 +1,78 @@
+import fs from 'fs';
 import {
-  WorkflowClient,
   WorkflowHandle,
   Workflow,
   WorkflowIdReusePolicy,
-} from "@temporalio/client";
+} from '@temporalio/client';
+import { Client, Connection, WorkflowClient } from '@temporalio/client';
+import config from '../../config/config';
 
 export enum WorkflowStatus {
-  Running = "RUNNING",
-  Completed = "COMPLETED",
-  Failed = "FAILED",
-  NotFound = "NOT_FOUND",
+  Running = 'RUNNING',
+  Completed = 'COMPLETED',
+  Failed = 'FAILED',
+  NotFound = 'NOT_FOUND',
 }
-// Initialize the WorkflowClient
-const client = new WorkflowClient();
+
+let client: Client | null = null;
+
+export async function getClient(): Promise<Client> {
+  if (!client) {
+    // Path to your certificate files
+    const certPath =
+      config.temporalCertificatesBasePath + '/temporal-ca-cert-x509';
+    const keyPath =
+      config.temporalCertificatesBasePath + '/temporal-ca-cert-x509-key';
+    const caPath = config.temporalCertificatesBasePath + '/temporal-ca-cert';
+
+    // Load certificates
+    const cert = fs.readFileSync(certPath);
+    const key = fs.readFileSync(keyPath);
+    const ca = fs.readFileSync(caPath);
+
+    // Create a connection with TLS configuration
+    const connection = await Connection.connect({
+      address: config.temporalCloudAddress, // Replace with your Temporal Cloud address
+      tls: {
+        clientCertPair: {
+          crt: cert,
+          key,
+        },
+      },
+    });
+
+    client = new Client({
+      connection,
+      namespace: config.temporalNamespace,
+    });
+  }
+
+  return client;
+}
 
 export namespace temporalClient {
   // Function to start a workflow
   export async function startWorkflow<T extends object>(
     workflow: (args: T) => Promise<any>,
     args: T,
-    workflowId: string
+    workflowId: string,
   ): Promise<WorkflowHandle> {
-    return await client.start(workflow, {
+    return await client.workflow.start(workflow, {
       args: [args],
       workflowId,
-      taskQueue: process.env.TEMPORAL_USER_TASK_QUEUE || "kk",
+      taskQueue: process.env.TEMPORAL_USER_TASK_QUEUE || 'kk',
     });
   }
   // Function to start a workflow
   export async function startDuplicateWorkflow<T extends object>(
     workflow: (args: T) => Promise<any>,
     args: T,
-    workflowId: string
+    workflowId: string,
   ): Promise<WorkflowHandle> {
-    return await client.start(workflow, {
+    return await client.workflow.start(workflow, {
       args: [args],
       workflowId,
-      taskQueue: process.env.TEMPORAL_USER_TASK_QUEUE || "kk",
+      taskQueue: process.env.TEMPORAL_USER_TASK_QUEUE || 'kk',
       workflowIdReusePolicy:
         WorkflowIdReusePolicy.WORKFLOW_ID_REUSE_POLICY_ALLOW_DUPLICATE,
     });
@@ -47,25 +83,19 @@ export namespace temporalClient {
    
     workflowId: string,
     signalName: string,
-    args: object
+    args: object,
   ): Promise<void> {
-    console.log(`Signaling workflow: ${workflowId} with signal: ${signalName} and args:`, args);
-    try {
-      const handle = await client.getHandle(workflowId);
-      await handle.signal(signalName, args);
-      console.log(`Signal sent successfully to workflow: ${workflowId}`);
-    } catch (error) {
-      console.error(`Error signaling workflow: ${workflowId}`, error);
-    }
+    const handle = await client.getHandle(workflowId);
+    await handle.signal(signalName, args);
   }
   
 
   // Function to check if a workflow exists
   export async function checkWorkflowExists(
-    workflowId: string
+    workflowId: string,
   ): Promise<boolean> {
     try {
-      const handle = await client.getHandle(workflowId);
+      const handle = await client.workflow.getHandle(workflowId);
       await handle.describe();
       return true;
     } catch (error) {
@@ -75,23 +105,23 @@ export namespace temporalClient {
 
   // Function to wait for the result of a workflow
   export async function getWorkflowResult<T>(workflowId: string): Promise<T> {
-    const handle = await client.getHandle(workflowId);
+    const handle = await client.workflow.getHandle(workflowId);
     return (await handle.result()) as T;
   }
 
   export const clientInstance = client;
 
   export async function checkWorkflowStatus(
-    workflowId: string
+    workflowId: string,
   ): Promise<string> {
     try {
-      const handle = await client.getHandle(workflowId);
+      const handle = await client.workflow.getHandle(workflowId);
       const description = await handle.describe();
 
       return description.status.name;
     } catch (error) {
-      return "not found";
-      console.error("Error checking workflow status:", error);
+      console.error('Error checking workflow status:', error);
+      return 'not found';
     }
   }
 }
