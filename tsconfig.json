@@ -12,7 +12,6 @@
     "allowUnreachableCode": false,
     "experimentalDecorators": true,
     "module": "commonjs",
-    "rootDirs": ["src", "../.."],
     "outDir": "dist",
     "sourceMap": true,
     "inlineSources": true,
